@@ -69,7 +69,7 @@ function setMonitorMode(user,profile){
   document.getElementById('monitorNotice').style.display='block';document.getElementById('guestBanner').style.display='none';
   document.getElementById('openPublish').style.display='inline-flex';document.getElementById('welcomeTitle').textContent='Diário de bordo';
   document.getElementById('welcomeSub').textContent='Gerencie as atividades publicadas para a comunidade.';
-  document.getElementById('monitorNotice').textContent=isAdmin?'Modo administrador: você pode gerenciar todas as publicações.':'Modo professor: você pode editar e apagar suas próprias publicações. As publicações são públicas.';
+  document.getElementById('monitorNotice').textContent='Modo professor: você pode editar e apagar todas as publicações. As publicações são públicas.';
 }
 async function checkProfile(user){
   const result=await supabaseClient.from('profiles').select('display_name,role,active').eq('id',user.id).maybeSingle();
@@ -85,7 +85,7 @@ async function photoSignedUrl(storagePath){
 async function loadPosts(){
   if(!supabaseClient){document.getElementById('timeline').innerHTML='<div class="empty">Serviço temporariamente indisponível.</div>';return;}
   document.getElementById('timeline').innerHTML='<div class="empty">Carregando publicações…</div>';
-  const columns='id,track,title,body,created_at,'+(isMonitor?'author_id,':'')+'post_photos(id,storage_path,position)';
+  const columns='id,track,title,body,created_at,author_id,post_photos(id,storage_path,position)';
   const result=await supabaseClient.from('posts').select(columns).eq('published',true).order('created_at',{ascending:false});
   if(result.error){
     console.error('Erro ao carregar publicações:',result.error);posts.splice(0,posts.length);render();
@@ -109,7 +109,7 @@ function render(){
     const pictures=post.photos&&post.photos.length?'<div class="photo-gallery">'+post.photos.map(function(url,i){
       return '<button class="gallery-thumb" data-gallery-post="'+index+'" data-gallery-photo="'+i+'" aria-label="Abrir foto '+(i+1)+'"><img src="'+escapeHtml(url)+'" alt="Foto da atividade"></button>';
     }).join('')+'</div>':(art[post.art]||art.bridge);
-    const canManage=isMonitor&&(isAdmin||post.author_id===currentUser.id);
+    const canManage=isMonitor;
     const actions=canManage?'<span class="post-actions"><button data-post-action="edit" data-post-index="'+index+'">Editar</button><button class="delete-post" data-post-action="delete" data-post-index="'+index+'">Apagar</button></span>':'';
     return '<article class="post"><div class="post-img">'+pictures+'<span class="tag" style="background:'+colors[post.track]+'">'+escapeHtml(post.name)+'</span></div>'+
       '<div class="post-body"><div class="post-meta"><span>'+escapeHtml(post.date)+'</span><span>◉ Registro da atividade</span></div><h3>'+
