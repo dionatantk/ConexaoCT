@@ -85,7 +85,7 @@ async function photoSignedUrl(storagePath){
 async function loadPosts(){
   if(!supabaseClient){document.getElementById('timeline').innerHTML='<div class="empty">Serviço temporariamente indisponível.</div>';return;}
   document.getElementById('timeline').innerHTML='<div class="empty">Carregando publicações…</div>';
-  const columns='id,track,title,body,created_at,author_id,post_photos(id,storage_path,position)';
+  const columns='id,track,title,body,created_at,author_id,teacher:profiles!posts_author_id_fkey(display_name),post_photos(id,storage_path,position)';
   const result=await supabaseClient.from('posts').select(columns).eq('published',true).order('created_at',{ascending:false});
   if(result.error){
     console.error('Erro ao carregar publicações:',result.error);posts.splice(0,posts.length);render();
@@ -97,7 +97,7 @@ async function loadPosts(){
     const urls=await Promise.all(photoRows.map(function(photo){return photoSignedUrl(photo.storage_path)}));
     const good=photoRows.map(function(photo,i){return {path:photo.storage_path,url:urls[i]}}).filter(function(photo){return !!photo.url});
     return {id:row.id,track:row.track,name:trackNames[row.track]||'Atividade do Contraturno',title:row.title,
-      description:row.body,desc:row.body,date:formatDate(row.created_at),author:trackAuthors[row.track]||'Equipe do Contraturno',
+      description:row.body,desc:row.body,date:formatDate(row.created_at),author:(row.teacher&&row.teacher.display_name)||trackAuthors[row.track]||'Equipe do Contraturno',
       art:trackArt[row.track]||'bridge',photos:good.map(function(photo){return photo.url}),
       photoPaths:photoRows.map(function(photo){return photo.storage_path}),author_id:row.author_id||null};
   }));
